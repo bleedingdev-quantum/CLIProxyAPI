@@ -19,6 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/access"
 	managementHandlers "github.com/router-for-me/CLIProxyAPI/v6/internal/api/handlers/management"
+	quantumspringHandlers "github.com/router-for-me/CLIProxyAPI/v6/internal/api/handlers/quantumspring"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/api/middleware"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/logging"
@@ -257,6 +258,9 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 	if hasManagementSecret {
 		s.registerManagementRoutes()
 	}
+
+	// Register QuantumSpring metrics routes
+	quantumspringHandlers.RegisterRoutes(engine, cfg)
 
 	if optionState.keepAliveEnabled {
 		s.enableKeepAlive(optionState.keepAliveTimeout, optionState.keepAliveOnTimeout)

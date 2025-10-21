@@ -1,0 +1,61 @@
+# QuantumSpring AI Proxy Dockerfile
+# Multi-stage build for optimized image size
+
+# Stage 1: Builder
+FROM golang:1.24-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
+# Set working directory
+WORKDIR /build
+
+# Copy go mod files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build binary with optimizations
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s -X main.Version=1.0.0 -X main.Commit=$(git rev-parse --short HEAD) -X main.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    -o cli-proxy-api \
+    ./cmd/server
+
+# Stage 2: Runtime
+FROM alpine:latest
+
+# Install runtime dependencies
+RUN apk --no-cache add ca-certificates tzdata
+
+# Create non-root user
+RUN addgroup -g 1000 aiproxy && \
+    adduser -D -u 1000 -G aiproxy aiproxy
+
+# Create directories
+WORKDIR /app
+RUN mkdir -p /data /app/config && \
+    chown -R aiproxy:aiproxy /app /data
+
+# Copy binary from builder
+COPY --from=builder /build/cli-proxy-api /app/cli-proxy-api
+
+# Copy example config
+COPY config.quantumspring.yaml /app/config.example.yaml
+
+# Switch to non-root user
+USER aiproxy
+
+# Expose ports
+EXPOSE 8317
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8317/_qs/health || exit 1
+
+# Volume for persistent data
+VOLUME ["/data"]
+
+# Default command
+CMD ["/app/cli-proxy-api", "--config", "/app/config/config.yaml"]

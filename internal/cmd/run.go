@@ -12,6 +12,7 @@ import (
 
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/api"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v6/internal/persistence"
 	"github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy"
 	log "github.com/sirupsen/logrus"
 )
@@ -47,6 +48,18 @@ func StartService(cfg *config.Config, configPath string, localPassword string) {
 	if err != nil {
 		log.Fatalf("failed to build proxy service: %v", err)
 	}
+
+	// Initialize persistence for usage statistics
+	if err := persistence.Initialize(cfg); err != nil {
+		log.Fatalf("failed to initialize persistence: %v", err)
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := persistence.Shutdown(ctx); err != nil {
+			log.WithError(err).Error("Failed to shutdown persistence")
+		}
+	}()
 
 	err = service.Run(runCtx)
 	if err != nil && !errors.Is(err, context.Canceled) {

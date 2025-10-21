@@ -54,6 +54,12 @@ type Config struct {
 
 	// RemoteManagement nests management-related options under 'remote-management'.
 	RemoteManagement RemoteManagement `yaml:"remote-management" json:"-"`
+
+	// Persistence configures persistent storage for usage statistics.
+	Persistence PersistenceConfig `yaml:"persistence" json:"persistence"`
+
+	// QuantumSpring configures QuantumSpring-specific features (metrics API & UI).
+	QuantumSpring QuantumSpringConfig `yaml:"quantumspring" json:"quantumspring"`
 }
 
 // RemoteManagement holds management API configuration under 'remote-management'.
@@ -64,6 +70,48 @@ type RemoteManagement struct {
 	SecretKey string `yaml:"secret-key"`
 	// DisableControlPanel skips serving and syncing the bundled management UI when true.
 	DisableControlPanel bool `yaml:"disable-control-panel"`
+}
+
+// PersistenceConfig configures persistent storage for usage statistics.
+type PersistenceConfig struct {
+	// Enabled toggles persistence of usage statistics.
+	Enabled bool `yaml:"enabled" json:"enabled"`
+
+	// Type specifies the storage backend type ("sqlite" or "json").
+	Type string `yaml:"type" json:"type"`
+
+	// Path is the file path for the storage backend.
+	Path string `yaml:"path" json:"path"`
+
+	// BufferSize is the maximum number of records to buffer before flushing.
+	BufferSize int `yaml:"buffer-size" json:"buffer-size"`
+
+	// FlushInterval is the maximum duration to wait before flushing buffered records.
+	FlushInterval string `yaml:"flush-interval" json:"flush-interval"`
+
+	// RetentionDays is the number of days to retain usage records (0 = infinite).
+	RetentionDays int `yaml:"retention-days" json:"retention-days"`
+}
+
+// QuantumSpringConfig configures QuantumSpring-specific features.
+type QuantumSpringConfig struct {
+	// Enabled toggles QuantumSpring metrics API and UI.
+	Enabled bool `yaml:"enabled" json:"enabled"`
+
+	// BindAddress is the IP address to bind the metrics endpoints to (default: "127.0.0.1").
+	BindAddress string `yaml:"bind-address" json:"bind-address"`
+
+	// BasicAuth configures Basic Authentication for metrics endpoints.
+	BasicAuth BasicAuthConfig `yaml:"basic-auth" json:"basic-auth"`
+}
+
+// BasicAuthConfig configures Basic Authentication.
+type BasicAuthConfig struct {
+	// Username for Basic Auth (empty = no auth).
+	Username string `yaml:"username" json:"username"`
+
+	// Password for Basic Auth (empty = no auth).
+	Password string `yaml:"password" json:"password"`
 }
 
 // QuotaExceeded defines the behavior when API quota limits are exceeded.
