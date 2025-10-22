@@ -1,0 +1,78 @@
+# QuantumSpring AI Proxy Configuration
+# Enhanced fork of CLIProxyAPI with persistent usage statistics
+
+# Server configuration
+port: 8317
+auth-dir: "~/.cli-proxy-api"
+debug: false
+logging-to-file: true
+
+# Enable usage statistics collection
+usage-statistics-enabled: true
+
+# Persistence configuration
+persistence:
+  enabled: true
+  type: sqlite  # "sqlite" or "json"
+  path: "./data/usage.db"
+  buffer-size: 100
+  flush-interval: 10s
+  retention-days: 90  # 0 = infinite retention
+
+# QuantumSpring metrics & UI
+quantumspring:
+  enabled: true
+  bind-address: "127.0.0.1"  # localhost only by default
+  basic-auth:
+    username: ""  # Empty = no authentication
+    password: ""
+
+# Proxy configuration (optional)
+proxy-url: ""
+
+# Request retry configuration
+request-retry: 3
+
+# Quota exceeded behavior
+quota-exceeded:
+  switch-project: true
+  switch-preview-model: true
+
+# Remote management API
+remote-management:
+  allow-remote: false
+  secret-key: ""  # Set your management key here
+  disable-control-panel: false
+
+# API keys for authentication (inline config-api-key provider)
+api-keys:
+  - "your-api-key-1"
+  - "your-api-key-2"
+
+# Generative Language API keys (for Gemini)
+generative-language-api-key:
+  - "AIzaSy...01"
+  - "AIzaSy...02"
+
+# Claude API keys
+claude-api-key:
+  - api-key: "sk-ant-..."
+    base-url: ""
+    proxy-url: ""
+
+# Codex/OpenAI API keys
+codex-api-key:
+  - api-key: "sk-..."
+    base-url: ""
+    proxy-url: ""
+
+# OpenAI compatibility providers
+openai-compatibility:
+  - name: "openrouter"
+    base-url: "https://openrouter.ai/api/v1"
+    api-key-entries:
+      - api-key: "sk-or-v1-..."
+        proxy-url: ""
+    models:
+      - name: "moonshotai/kimi-k2:free"
+        alias: "kimi-k2"

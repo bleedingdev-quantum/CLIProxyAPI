@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumSpring AI Proxy Metrics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f1419;
+            color: #e6edf3;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f1419 100%);
+            border-bottom: 1px solid #30363d;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #8b949e;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            border-color: #3b82f6;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #8b949e;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-change {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric-change.positive {
+            color: #3fb950;
+        }
+
+        .metric-change.negative {
+            color: #f85149;
+        }
+
+        .chart-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #e6edf3;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #8b949e;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .error {
+            background: #161b22;
+            border: 1px solid #da3633;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            color: #f85149;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+
+        .status-badge.online {
+            background: rgba(63, 185, 80, 0.15);
+            color: #3fb950;
+            border: 1px solid #3fb950;
+        }
+
+        .status-badge.offline {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+            border: 1px solid #f85149;
+        }
+
+        .refresh-info {
+            text-align: center;
+            color: #8b949e;
+            font-size: 0.875rem;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metric-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            QuantumSpring AI Proxy Metrics
+            <span id="status-badge" class="status-badge online">Online</span>
+        </h1>
+        <p>Real-time usage statistics and cost tracking for AI API consumption</p>
+    </div>
+
+    <div class="container">
+        <div id="error-container"></div>
+        <div id="loading" class="loading">Loading metrics</div>
+
+        <div id="content" style="display: none;">
+            <!-- KPI Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="total-requests">-</div>
+                    <div class="metric-label">Total Requests</div>
+                    <div class="metric-change" id="requests-change"></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="total-tokens">-</div>
+                    <div class="metric-label">Total Tokens</div>
+                    <div class="metric-change" id="tokens-change"></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="success-rate">-</div>
+                    <div class="metric-label">Success Rate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avg-latency">-</div>
+                    <div class="metric-label">Avg Latency (ms)</div>
+                </div>
+            </div>
+
+            <!-- Tokens Over Time Chart -->
+            <div class="chart-container">
+                <h2>Tokens Over Time (Last 24h)</h2>
+                <div class="chart-wrapper">
+                    <canvas id="tokens-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Usage by Model Chart -->
+            <div class="chart-container">
+                <h2>Usage by Model</h2>
+                <div class="chart-wrapper">
+                    <canvas id="model-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Requests by Provider Chart -->
+            <div class="chart-container">
+                <h2>Requests by Provider</h2>
+                <div class="chart-wrapper">
+                    <canvas id="provider-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="refresh-info">
+            Auto-refreshing every 30 seconds • Last updated: <span id="last-updated">-</span>
+        </div>
+    </div>
+
+    <script src="/_qs/metrics/ui/app.js"></script>
+</body>
+</html>

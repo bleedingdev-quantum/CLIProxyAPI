@@ -1,17 +1,17 @@
+// Package auth provides authentication functionality for various AI service providers.
+// It includes interfaces and implementations for token storage and authentication methods.
 package auth
 
-// TokenStorage defines the structure for storing OAuth2 token information,
-// along with associated user and project details. This data is typically
-// serialized to a JSON file for persistence.
-type TokenStorage struct {
-	// Token holds the raw OAuth2 token data, including access and refresh tokens.
-	Token any `json:"token"`
-	// ProjectID is the Google Cloud Project ID associated with this token.
-	ProjectID string `json:"project_id"`
-	// Email is the email address of the authenticated user.
-	Email string `json:"email"`
-	// Auto indicates if the project ID was automatically selected.
-	Auto bool `json:"auto"`
-	// Checked indicates if the associated Cloud AI API has been verified as enabled.
-	Checked bool `json:"checked"`
+// TokenStorage defines the interface for storing authentication tokens.
+// Implementations of this interface should provide methods to persist
+// authentication tokens to a file system location.
+type TokenStorage interface {
+	// SaveTokenToFile persists authentication tokens to the specified file path.
+	//
+	// Parameters:
+	//   - authFilePath: The file path where the authentication tokens should be saved
+	//
+	// Returns:
+	//   - error: An error if the save operation fails, nil otherwise
+	SaveTokenToFile(authFilePath string) error
 }

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  ai-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.quantumspring
+    container_name: quantumspring-ai-proxy
+    ports:
+      - "8317:8317"
+    volumes:
+      # Persistent data directory
+      - ./data:/data
+      # Configuration file
+      - ./config.yaml:/app/config/config.yaml:ro
+      # Optional: Auth directory (if using OAuth)
+      - ./auth:/root/.cli-proxy-api:ro
+    environment:
+      - TZ=America/New_York
+      # Optional: Override config via environment
+      # - QS_BIND_ADDRESS=0.0.0.0
+      # - QS_BASIC_AUTH_USER=admin
+      # - QS_BASIC_AUTH_PASS=secure-password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8317/_qs/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - aiproxy-network
+    labels:
+      - "com.quantumspring.service=ai-proxy"
+      - "com.quantumspring.version=1.0.0"
+
+networks:
+  aiproxy-network:
+    driver: bridge
